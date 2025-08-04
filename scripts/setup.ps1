@@ -5,25 +5,26 @@ Set-Culture -CultureInfo 'sv-SE'
 # Install PowerShell 7
 Invoke-WebRequest -Uri https://github.com/PowerShell/PowerShell/releases/download/v7.5.2/PowerShell-7.5.2-win-x64.msi -OutFile "$env:TEMP\pwsh.msi"
 Start-Process msiexec.exe -Wait -ArgumentList "/I $env:TEMP\pwsh.msi /quiet"
-Remove-Item -Path "$env:TEMP\pwsh.msi" -Force
+# Remove-Item -Path "$env:TEMP\pwsh.msi" -Force
 
-# # Install VS Code
-# Invoke-WebRequest -Uri https://aka.ms/win32-x64-user-stable -OutFile "$env:TEMP\vscode.exe"
-# Start-Process "$env:TEMP\vscode.exe" -Wait -ArgumentList "/silent"
+# Install VS Code
+Invoke-WebRequest -Uri https://aka.ms/win32-x64-user-stable -OutFile "$env:TEMP\vscode.exe"
+Start-Process "$env:TEMP\vscode.exe" -Wait -ArgumentList "/VERYSILENT /SP- /SUPPRESSMSGBOXES /NORESTART /NOCANCEL"
 # Remove-Item -Path "$env:TEMP\vscode.exe" -Force
 
 # Install mobules
-Install-Module -Name 'posh-git'
+Set-PSRepository -Name 'PSGallery' -InstallationPolicy Trusted
+Install-Module -Name 'posh-git' -Force
 
 # Install git
 Invoke-WebRequest -Uri https://github.com/git-for-windows/git/releases/download/v2.50.1.windows.1/Git-2.50.1-64-bit.exe -OutFile "$env:TEMP\git.exe"
 Start-Process "$env:TEMP\git.exe" -Wait -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NOCANCEL"
-Remove-Item -Path "$env:TEMP\git.exe" -Force
+# Remove-Item -Path "$env:TEMP\git.exe" -Force
 
 # Install go
 Invoke-WebRequest -Uri https://go.dev/dl/go1.24.5.windows-amd64.msi -OutFile "$env:TEMP\go.msi"
 Start-Process "$env:TEMP\go.msi" -Wait -ArgumentList "/q"
-Remove-Item -Path "$env:TEMP\go.msi" -Force
+# Remove-Item -Path "$env:TEMP\go.msi" -Force
 
 # Install Oh-My-Posh
 Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://ohmyposh.dev/install.ps1'))
