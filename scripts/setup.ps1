@@ -1,5 +1,5 @@
 ﻿$logPath = "$env:SystemDrive\setup-log.txt"
-Start-Transcript -Path $logPath -Append
+Start-Transcript -Path $logPath -Append -UseMinimalHeader
 # Set ut time and location
 Write-Host 'Setting up location...'
 Set-TimeZone -Id 'W. Europe Standard Time'
@@ -8,37 +8,38 @@ Write-Host 'Finished setting up location.'
 
 # Install PowerShell 7
 Write-Host 'Installing Powershell 7...'
-Invoke-WebRequest -Uri https://github.com/PowerShell/PowerShell/releases/download/v7.5.2/PowerShell-7.5.2-win-x64.msi -OutFile "$env:TEMP\pwsh.msi"
+Invoke-WebRequest -Uri 'https://github.com/PowerShell/PowerShell/releases/download/v7.5.2/PowerShell-7.5.2-win-x64.msi' -OutFile "$env:TEMP\pwsh.msi"
 Start-Process msiexec.exe -Wait -ArgumentList "/I $env:TEMP\pwsh.msi /quiet"
 # Remove-Item -Path "$env:TEMP\pwsh.msi" -Force
-Write-Host 'Finished installing Powershell 7'
+Write-Host 'Finished installing Powershell 7.'
 
 # Install VS Code
 Write-Host 'Installing vscode...'
-Invoke-WebRequest -Uri https://aka.ms/win32-x64-user-stable -OutFile "$env:TEMP\vscode.exe"
+Invoke-WebRequest -Uri 'https://aka.ms/win32-x64-system-stable' -OutFile "$env:TEMP\vscode.exe"
 Start-Process "$env:TEMP\vscode.exe" -Wait -ArgumentList "/VERYSILENT /SP- /SUPPRESSMSGBOXES /NORESTART /NOCANCEL /mergetasks=!runcode"
 # Remove-Item -Path "$env:TEMP\vscode.exe" -Force
 Write-Host 'Finished installing vscode.'
 
 # Install git
 Write-Host 'Installing git...'
-Invoke-WebRequest -Uri https://github.com/git-for-windows/git/releases/download/v2.50.1.windows.1/Git-2.50.1-64-bit.exe -OutFile "$env:TEMP\git.exe"
+Invoke-WebRequest -Uri 'https://github.com/git-for-windows/git/releases/download/v2.50.1.windows.1/Git-2.50.1-64-bit.exe' -OutFile "$env:TEMP\git.exe"
 Start-Process "$env:TEMP\git.exe" -Wait -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NOCANCEL"
 # Remove-Item -Path "$env:TEMP\git.exe" -Force
 Write-Host 'Finished installing git.'
 
 # Install go
 Write-Host "Installing go..."
-Invoke-WebRequest -Uri https://go.dev/dl/go1.24.5.windows-amd64.msi -OutFile "$env:TEMP\go.msi"
-Start-Process "$env:TEMP\go.msi" -Wait -ArgumentList "/q"
+Invoke-WebRequest -Uri 'https://go.dev/dl/go1.24.5.windows-amd64.msi' -OutFile "$env:TEMP\go.msi"
+Start-Process msiexec.exe -Wait -ArgumentList "/I $env:TEMP\go.msi /quiet"
 # Remove-Item -Path "$env:TEMP\go.msi" -Force
 Write-Host 'Finished installing go.'
 
 # Install Oh-My-Posh
 Write-Host 'Installing oh-my-posh...'
-Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://ohmyposh.dev/install.ps1'))
-Start-Process "oh-my-posh font install meslo" -Wait
+Invoke-WebRequest -Uri '' -OutFile "$env:TEMP\ohmyposh.msi"
+Start-Process msiexec.exe -Wait -ArgumentList "/I $env:TEMP\ohmyposh.msi /quiet"
 Start-Process "oh-my-posh" -Wait -ArgumentList 'font install meslo'
+# Remove-Item -Path "$env:TEMP\ohmyposh.msi" -Force
 Write-Host 'Finished installing oh-my-posh.'
 
 # Install mobules
