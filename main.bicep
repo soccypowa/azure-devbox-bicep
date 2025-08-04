@@ -1,91 +1,32 @@
-param location string = resourceGroup().location
+targetScope = 'subscription'
+
+@description('Name of Resource Group')
+param resourceGroupName string = 'devbox-rg'
+@description('Azure region')
+param location string = 'swedencentral'
+@description('VM Admin username')
 param adminUsername string
+@description('VM Admin password')
+@secure()
 param adminPassword string
-param vmSize string = ''
+@description('VM size')
+param vmSize string = 'Standard_DS2_v2'
+@description('Powershell setup script location')
 param scriptUri string
 
-resource vnet 'Microsoft.Network/virtualNetworks@2023-04-01' = {
-  name: 'devbox-net'
+resource rg 'Microsoft.Resources/resourceGroups@2025-04-01' = {
+  name: resourceGroupName
   location: location
-  properties: {
-    addressSpace: {
-      addressPrefixes: ['10.0.0.0/16']
-    }
-    subnets: [
-      {
-        name: 'default'
-        properties: {
-          addressPrefix: '10.0.0.0/24'
-        }
-      }
-    ]
-  }
 }
 
-resource nic 'Microsoft.Network/networkInterfaces@2023-04-01' = {
-  name: 'devbox-nic'
-  location: location
-  properties: {
-    ipConfigurations: [
-      {
-        name: 'ipconfig1'
-        properties: {
-          privateIPAllocationMethod: 'Dynamic'
-          subnet: {
-            id: vnet.properties.subnets[0].id
-          }
-        }
-      }
-    ]
-  }
-}
-
-resource vm 'Microsoft.Compute/virtualMachines@2023-03-01' = {
-  name: 'devbox-vm'
-  location: location
-  properties: {
-    hardwareProfile: {
-      vmSize: vmSize
-    }
-    osProfile: {
-      computerName: 'devbox'
-      adminUsername: adminUsername
-      adminPassword: adminPassword
-    }
-    storageProfile: {
-      imageReference: {
-        publisher: 'MicrosoftWindowsDesktop'
-        offer: 'windows-11'
-        sku: 'win11-24h2-pro'
-        version: 'latest'
-      }
-      osDisk: {
-        createOption: 'FromImage'
-      }
-    }
-    networkProfile: {
-      networkInterfaces: [
-        {
-          id: nic.id
-        }
-      ]
-    }
-  }
-}
-
-resource scriptExtension 'Microsoft.Compute/virtualMachines/extensions@2024-03-01' = {
-  parent: vm
-  name: 'setup-script'
-  properties: {
-    publisher: 'Microsoft.Compute'
-    type: 'CustomScriptExtension'
-    typeHandlerVersion: '1.10'
-    autoUpgradeMinorVersion: true
-    settings: {
-      fileUris: [
-        scriptUri
-      ]
-      commandToExecute: 'powershell -ExecutionPolicy Unrestricted -File setup.ps1'
-    }
+module vm 'vm.bicep' = {
+  name: 'vmDeployment'
+  scope: resourceGroup(rg.name)
+  params: {
+    location: location
+    adminUsername: adminUsername
+    adminPassword: adminPassword
+    vmSize: vmSize
+    scriptUri: scriptUri
   }
 }

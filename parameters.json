@@ -6,7 +6,7 @@
             "value": "Standard_DS2_v2"
         },
         "scriptUri": {
-            "value": "https://raw.githubusercontent.com/soccypowa/azure-devbox/main/scripts/setup.ps1"
+            "value": "https://raw.githubusercontent.com/soccypowa/azure-devbox-bicep/main/scripts/setup.ps1"
         }
     }
 }
