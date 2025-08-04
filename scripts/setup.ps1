@@ -1,4 +1,6 @@
-﻿# Set ut time and location
+﻿$logPath = "$env:SystemDrive\setup-log.txt"
+Start-Transcript -Path $logPath -Append
+# Set ut time and location
 Set-TimeZone -Id 'W. Europe Standard Time'
 Set-Culture -CultureInfo 'sv-SE'
 
@@ -52,3 +54,4 @@ foreach ($pwshProfile in $pwshProfiles) {
   }
 }
 $settings | ConvertTo-Json -Depth 10 | Set-Content -Path $settingsPath -Encoding utf8
+Stop-Transcript
