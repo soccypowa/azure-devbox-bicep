@@ -7,10 +7,10 @@ Invoke-WebRequest -Uri https://github.com/PowerShell/PowerShell/releases/downloa
 Start-Process msiexec.exe -Wait -ArgumentList "/I $env:TEMP\pwsh.msi /quiet"
 Remove-Item -Path "$env:TEMP\pwsh.msi" -Force
 
-# Install VS Code
-Invoke-WebRequest -Uri https://aka.ms/win32-x64-user-stable -OutFile "$env:TEMP\vscode.exe"
-Start-Process "$env:TEMP\vscode.exe" -Wait -ArgumentList "/silent"
-Remove-Item -Path "$env:TEMP\vscode.exe" -Force
+# # Install VS Code
+# Invoke-WebRequest -Uri https://aka.ms/win32-x64-user-stable -OutFile "$env:TEMP\vscode.exe"
+# Start-Process "$env:TEMP\vscode.exe" -Wait -ArgumentList "/silent"
+# Remove-Item -Path "$env:TEMP\vscode.exe" -Force
 
 # Install mobules
 Install-Module -Name 'posh-git'
