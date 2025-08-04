@@ -124,5 +124,3 @@ foreach ($pwshProfile in $pwshProfiles) {
 }
 $settings | ConvertTo-Json -Depth 10 | Set-Content -Path $settingsPath -Encoding utf8
 Write-Log 'Finishing setting up Terminal.app.'
-
-Stop-Transcript
