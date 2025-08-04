@@ -5,6 +5,7 @@ param adminUsername string
 param adminPassword string
 param vmSize string
 param scriptUri string
+param myPublicIp string
 
 resource vnet 'Microsoft.Network/virtualNetworks@2023-04-01' = {
   name: 'devbox-net'
@@ -33,12 +34,29 @@ resource nic 'Microsoft.Network/networkInterfaces@2023-04-01' = {
         name: 'ipconfig1'
         properties: {
           privateIPAllocationMethod: 'Dynamic'
+          publicIPAddress: {
+            id: publicIP.id
+          }
           subnet: {
             id: vnet.properties.subnets[0].id
           }
         }
       }
     ]
+    networkSecurityGroup: {
+      id: nsg.id
+    }
+  }
+}
+
+resource publicIP 'Microsoft.Network/publicIPAddresses@2024-07-01' = {
+  name: 'devbox-public-ip'
+  location: location
+  sku: {
+    name: 'Basic'
+  }
+  properties: {
+    publicIPAllocationMethod: 'Dynamic'
   }
 }
 
@@ -90,5 +108,40 @@ resource scriptExtension 'Microsoft.Compute/virtualMachines/extensions@2024-03-0
       ]
       commandToExecute: 'powershell -ExecutionPolicy Unrestricted -File setup.ps1'
     }
+  }
+}
+
+resource nsg 'Microsoft.Network/networkSecurityGroups@2024-07-01' = {
+  name: 'devbox-ng'
+  location: location
+  properties: {
+    securityRules: [
+      {
+        name: 'Allow-RDP-from-my-ip'
+        properties: {
+          priority: 1000
+          direction: 'Inbound'
+          access: 'Allow'
+          protocol: 'Tcp'
+          sourceAddressPrefix: myPublicIp
+          sourcePortRange: '*'
+          destinationAddressPrefix: '*'
+          destinationPortRange: '3389'
+        }
+      }
+      {
+        name: 'Allow-SSH-from-my-ip'
+        properties: {
+          priority: 1001
+          direction: 'Inbound'
+          access: 'Allow'
+          protocol: 'Tcp'
+          sourceAddressPrefix: myPublicIp
+          sourcePortRange: '*'
+          destinationAddressPrefix: '*'
+          destinationPortRange: '22'
+        }
+      }
+    ]
   }
 }
