@@ -114,7 +114,7 @@ New-Item -Path $PROFILE -ItemType File -Force
 @'
 Import-Module posh-git
 oh-my-posh init pwsh --config 'aliens' | Invoke-Expression
-'@ | Out-File -FilePath $PROFILE-Encoding utf8 -Force
+'@ | Out-File -FilePath $PROFILE -Encoding utf8 -Force
 Write-Log 'Finished creating Powershell profile.'
 
 # Set the font for Powershell in Terminal app
