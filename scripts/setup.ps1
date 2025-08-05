@@ -2,8 +2,8 @@
   param (
     [Parameter(Mandatory,Position=0)]
     [string]$text,
-    [Parameter]
-    [string]$path = "$env:SystemDrive\setup-log.txt" 
+    [Parameter()]
+    [string]$Path = "$env:SystemDrive\setup-log.txt"
   )
   Add-Content -Value $text -Path $path
 }
@@ -14,11 +14,19 @@ function Invoke-FileDownload {
     [string]$Uri,
     [Parameter(Mandatory)]
     [string]$OutFile,
-    [Parameter]
+    [Parameter()]
     [int]$TimeoutSeconds = 30,
-    [Parameter]
+    [Parameter()]
     [int]$MaxRetries = 3
   )
+
+  if (-not ([System.Type]::GetType("System.Net.Http.HttpClient", $false))) {
+    try {
+        Add-Type -AssemblyName System.Net.Http
+    } catch {
+        throw "Failed to load System.Net.Http. Make sure .NET Framework 4.7+ is installed. Error: $_"
+    }
+}
   
   $client = New-Object System.Net.Http.HttpClient
   $client.Timeout = [timespan]::FromSeconds($TimeoutSeconds)
@@ -31,7 +39,7 @@ function Invoke-FileDownload {
       Write-Log "Attempt $($attempt): Downloading: $Uri"
       $response = $client.GetAsync($Uri).Result
       if ($response.IsSuccessStatusCode) {
-        [System.IO.File]::WriteAllBytes($OutFile, $response.Content.ReadAsByteArrayAsync())
+        [System.IO.File]::WriteAllBytes($OutFile, $response.Content.ReadAsByteArrayAsync().Result)
         $success = $true
       } else {
         Write-Log "Failed to download $($Uri). Status: $($response.StatusCode)"
@@ -61,28 +69,28 @@ Write-Log 'Finished setting up location.'
 Write-Log 'Installing Powershell 7...'
 Invoke-FileDownload -Uri 'https://github.com/PowerShell/PowerShell/releases/download/v7.5.2/PowerShell-7.5.2-win-x64.msi' -OutFile "$env:TEMP\pwsh.msi"
 Start-Process msiexec.exe -Wait -ArgumentList "/I $env:TEMP\pwsh.msi /quiet"
-# Remove-Item -Path "$env:TEMP\pwsh.msi" -Force
+Remove-Item -Path "$env:TEMP\pwsh.msi" -Force
 Write-Log 'Finished installing Powershell 7.'
 
 # Install VS Code
 Write-Log 'Installing vscode...'
 Invoke-FileDownload -Uri 'https://aka.ms/win32-x64-system-stable' -OutFile "$env:TEMP\vscode.exe"
 Start-Process "$env:TEMP\vscode.exe" -Wait -ArgumentList "/VERYSILENT /SP- /SUPPRESSMSGBOXES /NORESTART /NOCANCEL /mergetasks=!runcode"
-# Remove-Item -Path "$env:TEMP\vscode.exe" -Force
+Remove-Item -Path "$env:TEMP\vscode.exe" -Force
 Write-Log 'Finished installing vscode.'
 
 # Install git
 Write-Log 'Installing git...'
 Invoke-FileDownload -Uri 'https://github.com/git-for-windows/git/releases/download/v2.50.1.windows.1/Git-2.50.1-64-bit.exe' -OutFile "$env:TEMP\git.exe" 
 Start-Process "$env:TEMP\git.exe" -Wait -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NOCANCEL"
-# Remove-Item -Path "$env:TEMP\git.exe" -Force
+Remove-Item -Path "$env:TEMP\git.exe" -Force
 Write-Log 'Finished installing git.'
 
 # Install go
 Write-Log "Installing go..."
 Invoke-FileDownload -Uri 'https://go.dev/dl/go1.24.5.windows-amd64.msi' -OutFile "$env:TEMP\go.msi"
 Start-Process msiexec.exe -Wait -ArgumentList "/I $env:TEMP\go.msi /quiet"
-# Remove-Item -Path "$env:TEMP\go.msi" -Force
+Remove-Item -Path "$env:TEMP\go.msi" -Force
 Write-Log 'Finished installing go.'
 
 # Install Oh-My-Posh
@@ -90,11 +98,12 @@ Write-Log 'Installing oh-my-posh...'
 Invoke-FileDownload -Uri 'https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/install-x64.msi' -OutFile "$env:TEMP\ohmyposh.msi"
 Start-Process msiexec.exe -Wait -ArgumentList "/I $env:TEMP\ohmyposh.msi /quiet"
 Start-Process "oh-my-posh" -Wait -ArgumentList 'font install meslo'
-# Remove-Item -Path "$env:TEMP\ohmyposh.msi" -Force
+Remove-Item -Path "$env:TEMP\ohmyposh.msi" -Force
 Write-Log 'Finished installing oh-my-posh.'
 
 # Install mobules
 Write-Log 'Installing psmodule posh-git...'
+Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope CurrentUser
 Set-PSRepository -Name 'PSGallery' -InstallationPolicy Trusted
 Install-Module -Name 'posh-git' -Force
 Write-Log 'Finished installing psmodule posh-git.'
