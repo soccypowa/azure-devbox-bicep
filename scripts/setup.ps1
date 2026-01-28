@@ -1,58 +1,11 @@
 ﻿function Write-Log {
   param (
-    [Parameter(Mandatory,Position=0)]
+    [Parameter(Mandatory, Position = 0)]
     [string]$text,
     [Parameter()]
     [string]$Path = "$env:SystemDrive\setup-log.txt"
   )
   Add-Content -Value $text -Path $path
-}
-
-function Invoke-FileDownload {
-  param (
-    [Parameter(Mandatory)]
-    [string]$Uri,
-    [Parameter(Mandatory)]
-    [string]$OutFile,
-    [Parameter()]
-    [int]$TimeoutSeconds = 30,
-    [Parameter()]
-    [int]$MaxRetries = 3
-  )
-
-  if (-not ([System.Type]::GetType("System.Net.Http.HttpClient", $false))) {
-    try {
-        Add-Type -AssemblyName System.Net.Http
-    } catch {
-        throw "Failed to load System.Net.Http. Make sure .NET Framework 4.7+ is installed. Error: $_"
-    }
-}
-  
-  $client = New-Object System.Net.Http.HttpClient
-  $client.Timeout = [timespan]::FromSeconds($TimeoutSeconds)
-  $attempt = 0
-  $success = $false
-
-  while (-not $success -and $attempt -lt $MaxRetries) {
-    try {
-      $attempt++
-      Write-Log "Attempt $($attempt): Downloading: $Uri"
-      $response = $client.GetAsync($Uri).Result
-      if ($response.IsSuccessStatusCode) {
-        [System.IO.File]::WriteAllBytes($OutFile, $response.Content.ReadAsByteArrayAsync().Result)
-        $success = $true
-      } else {
-        Write-Log "Failed to download $($Uri). Status: $($response.StatusCode)"
-      }
-    }
-    catch {
-      Write-Log "Error downloading $($Uri): $_"
-    }
-  }
-  if (-not $success) {
-    Write-Log "Failed to download $($Uri) after $($MaxRetries) attempts."
-  }
-  $client.Dispose()
 }
 
 Write-Log 'Setting Progress preference...'
@@ -70,10 +23,32 @@ try {
 
 # Set culture persistently system-wide via registry
 try {
-  $regPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Nls\Language'
-  Set-ItemProperty -Path $regPath -Name 'Default' -Value '0000081d' # sv-SE LCID
-  $regPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Nls\Locale'
-  Set-ItemProperty -Path $regPath -Name '(Default)' -Value '00000c1d'
+  $Culture = 'sv-SE'
+  $LCID = 1053       # LCID for sv-SE
+  $LocaleHex = '00000c1d'
+
+  # 1. Set system locale
+  Set-WinSystemLocale -SystemLocale $Culture
+  Set-WinUserLanguageList -LanguageList $Culture -Force
+
+  # 2. Set default input and UI languages for all users
+  Set-Culture -CultureInfo $Culture
+
+  # 3. Update default profile for new users
+  $DefaultUserReg = 'HKU\.DEFAULT\Control Panel\International'
+  $props = @{
+    Locale      = $LocaleHex
+    sShortDate  = 'yyyy-MM-dd'
+    sLongDate   = 'yyyy MMMM d'
+    sTimeFormat = 'HH:mm:ss'
+    iCountry    = 46  # Sweden
+  }
+
+  foreach ($name in $props.Keys) {
+    Set-ItemProperty -Path $DefaultUserReg -Name $name -Value $props[$name]
+  }
+
+  Write-Output "System-wide culture set to $Culture. A reboot may be required."
   Write-Log 'Successfully set culture to sv-SE system-wide'
 } catch {
   Write-Log "Failed to set culture: $_"
@@ -91,7 +66,7 @@ Write-Log "Finished setting up SSH"
 # Install Chcolatey
 Write-Log "Setting up Chocolatey"
 Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+$env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
 Write-Log "Finished setup Chocolatey"
 
 # Install PowerShell 7
