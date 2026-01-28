@@ -61,8 +61,22 @@ Write-Log 'Finished setting Progress preference.'
 
 # Set ut time and location
 Write-Log 'Setting up location...'
-Set-TimeZone -Id 'W. Europe Standard Time'
-Set-Culture -CultureInfo 'sv-SE'
+try {
+  Set-TimeZone -Id 'W. Europe Standard Time'
+  Write-Log 'Successfully set timezone to W. Europe Standard Time'
+} catch {
+  Write-Log "Failed to set timezone: $_"
+}
+
+# Set culture persistently for current user via registry
+try {
+  $regPath = 'HKCU:\Control Panel\International'
+  Set-ItemProperty -Path $regPath -Name 'Locale' -Value '0000081d' # sv-SE LCID
+  Set-ItemProperty -Path $regPath -Name 'LocaleName' -Value 'sv-SE'
+  Write-Log 'Successfully set culture to sv-SE'
+} catch {
+  Write-Log "Failed to set culture: $_"
+}
 Write-Log 'Finished setting up location.'
 
 # Set up ssh and set key
@@ -80,55 +94,26 @@ $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";"
 Write-Log "Finished setup Chocolatey"
 
 # Install PowerShell 7
-# Write-Log 'Installing Powershell 7...'
-# Invoke-FileDownload -Uri 'https://github.com/PowerShell/PowerShell/releases/download/v7.5.4/PowerShell-7.5.4-win-x64.msi' -OutFile "$env:TEMP\pwsh.msi"
-# Start-Process msiexec.exe -Wait -ArgumentList "/I $env:TEMP\pwsh.msi /quiet"
-# Remove-Item -Path "$env:TEMP\pwsh.msi" -Force
-# Write-Log 'Finished installing Powershell 7.'
-
 Write-Log 'Installing Powershell 7...'
 choco install powershell-core -y
 Write-Log 'Finished installing Powershell 7.'
 
 # Install VS Code
-# Write-Log 'Installing vscode...'
-# Invoke-FileDownload -Uri 'https://aka.ms/win32-x64-system-stable' -OutFile "$env:TEMP\vscode.exe"
-# Start-Process "$env:TEMP\vscode.exe" -Wait -ArgumentList "/VERYSILENT /SP- /SUPPRESSMSGBOXES /NORESTART /NOCANCEL /mergetasks=!runcode"
-# Remove-Item -Path "$env:TEMP\vscode.exe" -Force
-# Write-Log 'Finished installing vscode.'
-
 Write-Log 'Installing vscode...'
 choco install vscode -y
 Write-Log 'Finished installing vscode.'
 
 # Install git
-# Write-Log 'Installing git...'
-# Invoke-FileDownload -Uri 'https://github.com/git-for-windows/git/releases/download/v2.50.1.windows.1/Git-2.50.1-64-bit.exe' -OutFile "$env:TEMP\git.exe" 
-# Start-Process "$env:TEMP\git.exe" -Wait -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NOCANCEL"
-# Remove-Item -Path "$env:TEMP\git.exe" -Force
-# Write-Log 'Finished installing git.'
-
 Write-Log 'Installing git...'
 choco install git -y
 Write-Log 'Finished installing git.'
 
 # Install go
-# Write-Log "Installing go..."
-# Invoke-FileDownload -Uri 'https://go.dev/dl/go1.24.5.windows-amd64.msi' -OutFile "$env:TEMP\go.msi"
-# Start-Process msiexec.exe -Wait -ArgumentList "/I $env:TEMP\go.msi /quiet"
-# Remove-Item -Path "$env:TEMP\go.msi" -Force
-# Write-Log 'Finished installing go.'
 Write-Log "Installing go..."
 choco install go -y
 Write-Log 'Finished installing go.'
 
 # Install Oh-My-Posh
-# Write-Log 'Installing oh-my-posh...'
-# Invoke-FileDownload -Uri 'https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/install-x64.msi' -OutFile "$env:TEMP\ohmyposh.msi"
-# Start-Process msiexec.exe -Wait -ArgumentList "/I $env:TEMP\ohmyposh.msi /quiet"
-# Start-Process "oh-my-posh" -Wait -ArgumentList 'font install meslo'
-# Remove-Item -Path "$env:TEMP\ohmyposh.msi" -Force
-
 Write-Log 'Installing oh-my-posh...'
 choco install oh-my-posh -y
 Start-Process "oh-my-posh" -Wait -ArgumentList 'font install meslo'
