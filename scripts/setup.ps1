@@ -68,12 +68,13 @@ try {
   Write-Log "Failed to set timezone: $_"
 }
 
-# Set culture persistently for current user via registry
+# Set culture persistently system-wide via registry
 try {
-  $regPath = 'HKCU:\Control Panel\International'
-  Set-ItemProperty -Path $regPath -Name 'Locale' -Value '0000081d' # sv-SE LCID
-  Set-ItemProperty -Path $regPath -Name 'LocaleName' -Value 'sv-SE'
-  Write-Log 'Successfully set culture to sv-SE'
+  $regPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Nls\Language'
+  Set-ItemProperty -Path $regPath -Name 'Default' -Value '0000081d' # sv-SE LCID
+  $regPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Nls\Locale'
+  Set-ItemProperty -Path $regPath -Name '(Default)' -Value '00000c1d'
+  Write-Log 'Successfully set culture to sv-SE system-wide'
 } catch {
   Write-Log "Failed to set culture: $_"
 }
